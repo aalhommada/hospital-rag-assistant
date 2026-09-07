@@ -1,0 +1,9 @@
+Django
+psycopg[binary]
+pgvector
+anthropic
+fastembed
+pypdf
+python-docx
+python-dotenv
+PyYAML

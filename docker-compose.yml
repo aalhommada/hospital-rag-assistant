@@ -1,0 +1,24 @@
+# Postgres with pgvector already compiled in. This is the only infrastructure
+# the project needs: the vector index and the keyword index live in the same
+# database as the application tables.
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: hospital-rag-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hospital_rag}
+      POSTGRES_USER: ${POSTGRES_USER:-hospital}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hospital}
+    ports:
+      # host:container — 5433 on the host keeps a local Postgres on 5432 alone.
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - hospital_rag_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hospital} -d ${POSTGRES_DB:-hospital_rag}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  hospital_rag_pgdata:
