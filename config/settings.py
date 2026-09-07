@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "knowledge",
     "appointments",
+    "assistant",
 ]
 
 MIDDLEWARE = [
