@@ -1,0 +1,27 @@
+<article class="message message-assistant {% if message.refused %}is-refusal{% endif %}">
+  <p class="message-role">
+    Assistant
+    {% if message.route %}<span class="route route-{{ message.route }}">{{ message.get_route_display }}</span>{% endif %}
+  </p>
+  <div class="bubble">
+    <div class="answer">{{ message.rendered }}</div>
+
+    {% if message.citations.all %}
+      <details class="sources" open>
+        <summary>{{ message.citations.all|length }} source{{ message.citations.all|pluralize }}</summary>
+        <ol class="source-list">
+          {% for citation in message.citations.all %}
+            <li id="source-{{ message.pk }}-{{ citation.ordinal }}">
+              <p class="source-title">{{ citation.label }}</p>
+              <p class="source-excerpt">{{ citation.excerpt }}</p>
+              <p class="source-meta">
+                {% if citation.reviewed_on %}Reviewed {{ citation.reviewed_on|date:"j F Y" }} · {% endif %}
+                match {{ citation.similarity|floatformat:2 }}
+              </p>
+            </li>
+          {% endfor %}
+        </ol>
+      </details>
+    {% endif %}
+  </div>
+</article>

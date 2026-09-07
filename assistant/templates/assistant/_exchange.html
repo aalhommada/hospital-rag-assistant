@@ -1,0 +1,14 @@
+{% comment %}
+Returned by POST /ask/. It contains the patient's question and an empty answer
+bubble whose data-stream-url tells chat.js where to get the answer from.
+{% endcomment %}
+{% include "assistant/_question.html" with question=question %}
+
+<article class="message message-assistant is-streaming"
+         data-stream-url="{% url 'assistant:stream' question.pk %}">
+  <p class="message-role">Assistant</p>
+  <div class="bubble">
+    <p class="status" data-status>Thinking…</p>
+    <div class="answer" data-answer></div>
+  </div>
+</article>

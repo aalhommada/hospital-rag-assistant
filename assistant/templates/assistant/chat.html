@@ -1,0 +1,81 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Patient information assistant — {{ hospital_name }}</title>
+  <link rel="stylesheet" href="{% static 'assistant/chat.css' %}">
+  {# htmx is vendored rather than loaded from a CDN: a hospital page should not depend on a third party being up. #}
+  <script src="{% static 'assistant/htmx.min.js' %}" defer></script>
+  <script src="{% static 'assistant/chat.js' %}" defer></script>
+</head>
+<body>
+  <header class="banner">
+    <div class="banner-inner">
+      <div>
+        <p class="banner-title">Patient information assistant</p>
+        <p class="banner-subtitle">{{ hospital_name }}</p>
+      </div>
+      <p class="banner-warning" role="note">
+        Not for medical advice. In an emergency call <strong>{{ emergency_number }}</strong>.
+      </p>
+    </div>
+  </header>
+
+  <main class="chat" id="chat">
+    <div class="thread" id="thread">
+      {% if not messages %}
+        <div class="intro">
+          <h1>How can I help?</h1>
+          <p>
+            I answer from {{ hospital_name }}'s own published documents, and I show you
+            exactly which document each answer came from. I can also book an outpatient
+            appointment.
+          </p>
+          <p class="intro-limit">
+            I cannot give medical advice. For anything about your symptoms, your medicines,
+            or your test results, please speak to your doctor.
+          </p>
+          <div class="suggestions">
+            <button type="button" class="suggestion">Can I eat before an MRI scan?</button>
+            <button type="button" class="suggestion">What are the visiting hours on the children's ward?</button>
+            <button type="button" class="suggestion">How much is parking for four hours?</button>
+            <button type="button" class="suggestion">Book me a cardiology appointment next week</button>
+          </div>
+        </div>
+      {% endif %}
+
+      {% for message in messages %}
+        {% if message.role == "user" %}
+          {% include "assistant/_question.html" with question=message %}
+        {% else %}
+          {% include "assistant/_answer.html" with message=message %}
+        {% endif %}
+      {% endfor %}
+    </div>
+  </main>
+
+  <footer class="composer">
+    <form class="composer-form"
+          hx-post="{% url 'assistant:ask' %}"
+          hx-target="#thread"
+          hx-swap="beforeend"
+          hx-on::after-request="this.reset(); this.question.focus();">
+      {% csrf_token %}
+      <label class="visually-hidden" for="question">Your question</label>
+      <input type="text"
+             id="question"
+             name="question"
+             autocomplete="off"
+             maxlength="1000"
+             required
+             placeholder="Ask about preparing for a procedure, visiting, parking, or an appointment…">
+      <button type="submit">Ask</button>
+    </form>
+    <p class="composer-note">
+      Answers come from hospital documents and are shown with their source. Do not enter
+      anything you would not want stored.
+    </p>
+  </footer>
+</body>
+</html>
