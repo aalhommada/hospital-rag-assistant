@@ -2,3 +2,6 @@
 pytest
 pytest-django
 ruff
+# Only needed to regenerate the sample PDF in sample_data/ — see
+# scripts/build_binary_samples.py. Not needed to run the application.
+reportlab

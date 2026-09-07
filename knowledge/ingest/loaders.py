@@ -156,30 +156,33 @@ def _first_heading(blocks: list[Block]) -> str | None:
 
 def load_pdf(path: Path) -> LoadedDocument:
     """
-    Extract text from a PDF, treating short standalone lines as headings.
+    Extract text from a PDF and rebuild its paragraphs.
 
-    A PDF has no heading tags — only glyphs at positions. The heuristic below
-    (a short line, no closing punctuation, followed by a blank line) recovers
-    most headings in a plainly formatted document, which is what hospital
-    leaflets usually are. It will not survive a two-column research paper, and
-    it cannot read a scan at all; both of those need a layout-aware parser.
-    That is a real limit of this project, and the README says so.
+    A PDF has no paragraphs and no headings — only glyphs at positions. Text
+    extraction gives back one line per *visual* line, so a paragraph arrives
+    already broken into pieces and has to be sewn back together. Two signals do
+    the sewing, and both are about line width:
+
+      * A line that ends a sentence **and** stops well short of the right
+        margin is the last line of its paragraph. A line that ends a sentence
+        but runs to the margin is just a sentence boundary mid-paragraph.
+      * A short line with no closing punctuation is a heading.
+
+    This works on plainly formatted documents, which is what hospital leaflets
+    are. It will not survive a two-column research paper, and it cannot read a
+    scanned page at all, because a scan contains no text to extract. Both cases
+    need a layout-aware parser or a vision model — see README, "Known limits".
     """
     from pypdf import PdfReader
 
     reader = PdfReader(str(path))
     blocks: list[Block] = []
-
     for page in reader.pages:
-        text = page.extract_text() or ""
-        for raw_paragraph in re.split(r"\n\s*\n", text):
-            paragraph = " ".join(raw_paragraph.split())
-            if not paragraph:
-                continue
-            if _looks_like_heading(paragraph):
-                blocks.append(Block(kind="heading", text=paragraph, level=2))
-            else:
-                blocks.append(Block(kind="text", text=paragraph))
+        blocks.extend(_reflow_page(page.extract_text() or ""))
+
+    # The first heading on page one is the document title, not a section.
+    if blocks and blocks[0].kind == "heading":
+        blocks[0].level = 1
 
     metadata_title = (reader.metadata.title if reader.metadata else None) or ""
     title = metadata_title.strip() or _first_heading(blocks) or path.stem.replace("-", " ").title()
@@ -192,11 +195,46 @@ def load_pdf(path: Path) -> LoadedDocument:
     )
 
 
-def _looks_like_heading(paragraph: str) -> bool:
+def _reflow_page(text: str) -> list[Block]:
+    lines = [line.strip() for line in text.splitlines()]
+    lines = [line for line in lines if line]
+    if not lines:
+        return []
+
+    # How wide a full line of body text is on this page. Taking a high
+    # percentile rather than the maximum keeps one unusually long line from
+    # skewing it.
+    widths = sorted(len(line) for line in lines)
+    body_width = widths[min(int(len(widths) * 0.9), len(widths) - 1)]
+
+    blocks: list[Block] = []
+    paragraph: list[str] = []
+
+    def flush() -> None:
+        if paragraph:
+            blocks.append(Block(kind="text", text=" ".join(paragraph)))
+            paragraph.clear()
+
+    for line in lines:
+        if _looks_like_heading(line):
+            flush()
+            blocks.append(Block(kind="heading", text=line, level=2))
+            continue
+
+        paragraph.append(line)
+        if line.endswith((".", "!", "?")) and len(line) < body_width * 0.9:
+            flush()
+
+    flush()
+    return blocks
+
+
+def _looks_like_heading(line: str) -> bool:
     return (
-        len(paragraph) <= 70
-        and not paragraph.endswith((".", ",", ";", ":"))
-        and len(paragraph.split()) <= 10
+        len(line) <= 70
+        and len(line.split()) <= 10
+        and not line.endswith((".", ",", ";", ":", "!", "?"))
+        and line[:1].isupper()
     )
 
 
