@@ -211,8 +211,8 @@ Everything lives in `.env` — see `.env.example` for the annotated list.
 | Setting | Default | Notes |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | — | The only key required |
-| `CLAUDE_ANSWER_MODEL` | `claude-opus-5` | Writes the grounded answer |
-| `CLAUDE_ROUTER_MODEL` | `claude-opus-5` | Classifies and rewrites. An obvious candidate for a cheaper model — decide with `make evaluate-routing`, not by guessing |
+| `CLAUDE_ANSWER_MODEL` | `claude-sonnet-5` | Writes the grounded answer. Move up to `claude-opus-5` if you see paraphrased numbers or missing citations |
+| `CLAUDE_ROUTER_MODEL` | `claude-sonnet-5` | Classifies and rewrites. Runs on every message, so it decides your bill — and it is safety-critical. Change it with `make evaluate-routing`, not on a hunch |
 | `CLAUDE_ENABLE_FALLBACKS` | `true` | Server-side refusal fallbacks (see below) |
 | `EMBEDDING_PROVIDER` | `local` | `local`, `voyage`, or `openai` |
 | `RETRIEVAL_TOP_K` | `6` | Passages placed in the prompt |
@@ -228,6 +228,48 @@ no content. With `CLAUDE_ENABLE_FALLBACKS=true` (the default) the API retries
 the same request on a fallback model inside the same call, so a borderline
 question about fasting before an operation still gets answered from the
 hospital's own leaflet. Set it to `false` to see refusals directly.
+
+### Model choice and cost
+
+Two calls happen per question: a router call on every message, and a generation
+call on the ones that get answered. Both models are set independently.
+
+Every call logs its own token count and estimated cost at `INFO` level:
+
+```
+INFO assistant.llm: usage router model=claude-sonnet-5 in=812 cached=0 out=141 est=$0.00303
+INFO assistant.llm: usage answer model=claude-sonnet-5 in=2794 cached=0 out=387 est=$0.00946
+```
+
+Watch the output number. With adaptive thinking on, reasoning tokens are billed
+as output even though the patient never sees them — invisible in the transcript
+and very visible on the bill.
+
+Rough per-question totals, both calls included:
+
+| | Per question | 1,000 questions | 100,000 questions |
+|---|---|---|---|
+| `claude-opus-5` | ~$0.029 | ~$29 | ~$2,900 |
+| `claude-sonnet-5` *(default)* | ~$0.012 | ~$12 | ~$1,160 |
+| `claude-haiku-4-5` router + Sonnet answer | ~$0.009 | ~$9 | ~$870 |
+
+For trying the project out, this is pennies either way. It only starts to matter
+at deployment volume — and by then you should be choosing from `make
+evaluate-routing` output rather than from this table.
+
+**Do not downgrade the router without measuring it.** It is the component that
+separates "how long must I fast?" from "should I stop my warfarin?". The
+evaluation reports refusal mistakes separately and in red, precisely because
+that is the one number that must not regress:
+
+```
+  Routed correctly                             44/47  (94%)
+  1 question(s) that should have been refused were not. Fix this before anything else.
+```
+
+Prompt caching is not used here. Both system prompts are under a thousand
+tokens, below the minimum cacheable prefix, so there would be nothing to cache.
+That changes if you grow the prompts substantially.
 
 ### Changing the embedding model
 

@@ -41,7 +41,7 @@ from appointments.tools import TOOL_DEFINITIONS, execute_tool
 from knowledge.retrieval import hybrid_search
 
 from . import prompts
-from .llm import LLMNotConfigured, describe_refusal, stream_messages
+from .llm import LLMNotConfigured, describe_refusal, log_usage, stream_messages
 from .models import Citation, Conversation, Message
 from .rendering import extract_cited_indices
 from .router import route
@@ -175,6 +175,7 @@ def _handle_information(conversation, question, decision) -> Iterator[dict[str, 
             yield {"type": "token", "text": fragment}
         final = stream.get_final_message()
 
+    log_usage("answer", settings.CLAUDE_ANSWER_MODEL, getattr(final, "usage", None))
     text = "".join(collected).strip()
 
     # A refusal arrives as a normal 200 with no content, so it has to be
@@ -226,6 +227,7 @@ def _handle_booking(conversation, question, decision) -> Iterator[dict[str, Any]
                 yield {"type": "token", "text": fragment}
             final = stream.get_final_message()
 
+        log_usage("booking", settings.CLAUDE_ANSWER_MODEL, getattr(final, "usage", None))
         collected.extend(turn_text)
 
         if final.stop_reason != "tool_use":

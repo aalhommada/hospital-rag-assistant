@@ -163,8 +163,8 @@ RRF_K = env_int("RRF_K", 60)
 # ---------------------------------------------------------------------------
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-CLAUDE_ANSWER_MODEL = os.environ.get("CLAUDE_ANSWER_MODEL", "claude-opus-5")
-CLAUDE_ROUTER_MODEL = os.environ.get("CLAUDE_ROUTER_MODEL", "claude-opus-5")
+CLAUDE_ANSWER_MODEL = os.environ.get("CLAUDE_ANSWER_MODEL", "claude-sonnet-5")
+CLAUDE_ROUTER_MODEL = os.environ.get("CLAUDE_ROUTER_MODEL", "claude-sonnet-5")
 CLAUDE_ENABLE_FALLBACKS = env_bool("CLAUDE_ENABLE_FALLBACKS", True)
 # Generous enough that adaptive thinking plus a cited answer never truncates,
 # while the prompt keeps the visible answer short.

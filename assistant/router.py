@@ -27,7 +27,7 @@ from typing import Literal
 from django.conf import settings
 from pydantic import BaseModel, Field
 
-from .llm import get_client
+from .llm import get_client, log_usage
 from .prompts import ROUTER_SYSTEM
 
 logger = logging.getLogger(__name__)
@@ -62,6 +62,8 @@ def route(question: str, history: list[dict] | None = None) -> RouteDecision:
         messages=messages,
         output_format=RouteDecision,
     )
+
+    log_usage("router", settings.CLAUDE_ROUTER_MODEL, getattr(response, "usage", None))
 
     decision = response.parsed_output
     if decision is None:

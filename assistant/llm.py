@@ -75,6 +75,54 @@ def stream_messages(**kwargs):
     return client.messages.stream(**kwargs)
 
 
+# Published price per million tokens, as (input, output). Used only to turn the
+# token counts below into a number you can reason about — it is a convenience,
+# not a billing record, and it will drift as prices change.
+PRICES_PER_MTOK = {
+    "claude-opus-5": (5.0, 25.0),
+    "claude-sonnet-5": (2.0, 10.0),
+    "claude-haiku-4-5": (1.0, 5.0),
+    "claude-fable-5": (10.0, 50.0),
+    "claude-opus-4-8": (5.0, 25.0),
+    "claude-sonnet-4-6": (3.0, 15.0),
+}
+
+
+def log_usage(label: str, model: str, usage) -> float:
+    """
+    Log what one call cost, and return the estimate in dollars.
+
+    Worth having because model choice is the single biggest cost lever in this
+    project, and it should be decided from numbers rather than intuition. Run
+    the app with `INFO` logging and every call prints its own price.
+
+    Note what the numbers include: with adaptive thinking on, reasoning tokens
+    are billed as output even though they never reach the patient. That is
+    invisible in the transcript and very visible on the bill.
+    """
+    if usage is None:
+        return 0.0
+
+    read = getattr(usage, "input_tokens", 0) or 0
+    written = getattr(usage, "output_tokens", 0) or 0
+    cached = getattr(usage, "cache_read_input_tokens", 0) or 0
+
+    input_price, output_price = PRICES_PER_MTOK.get(model, (0.0, 0.0))
+    # Cached input is billed at roughly a tenth of the normal rate.
+    cost = (read * input_price + cached * input_price * 0.1 + written * output_price) / 1_000_000
+
+    logger.info(
+        "usage %s model=%s in=%d cached=%d out=%d est=$%.5f",
+        label,
+        model,
+        read,
+        cached,
+        written,
+        cost,
+    )
+    return cost
+
+
 def describe_refusal(stop_reason: str | None, stop_details) -> str:
     """A log line for a refused request. Never shown to a patient."""
     if stop_reason != "refusal":
