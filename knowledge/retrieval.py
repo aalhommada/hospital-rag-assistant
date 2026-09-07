@@ -35,14 +35,32 @@ rank, the best result always scores 1/(60+1) = 0.0164 — whether the question
 was "how much is parking?" or "what is the capital of France?". Thresholding on
 the fused score therefore filters nothing.
 
-So relevance is judged separately, on an absolute signal: the cosine similarity
-between the question and the chunk. On this corpus that separates cleanly —
-questions the documents answer score 0.74 to 0.85, questions they do not score
-0.48 to 0.58 — and `RETRIEVAL_MIN_SIMILARITY` sits at 0.65, in the gap.
+So relevance is judged separately, and a chunk earns its place in the prompt by
+clearing **either** of two independent bars.
 
-That floor is what makes "the documents do not cover this" possible. Without
-it, every question returns six chunks however irrelevant, and a model handed
-six irrelevant passages will find a way to build an answer out of them.
+**Semantic evidence.** Cosine similarity between the question and the chunk, on
+an absolute scale. Measured on this corpus, questions the documents answer
+score 0.68 to 0.91 and questions they do not score 0.41 to 0.56, so
+`RETRIEVAL_MIN_SIMILARITY` sits at 0.65, inside the gap.
+
+**Lexical evidence.** The chunk was returned by the keyword arm at all. This
+second bar exists because the first one has a blind spot that would undo the
+whole point of hybrid search: a query that is a bare identifier — a phone
+number, "Hospital-Guest", a ward name — carries almost no semantic content, so
+its best cosine similarity can sit *below* the floor even when the keyword arm
+found the exact string. Searching for "020 7946 0400" scores 0.614 and would
+otherwise be thrown away with the right answer in hand.
+
+Trusting a keyword hit is safe here because `websearch_to_tsquery` requires
+*every* term in the query to appear in the chunk. That is why off-topic
+questions return nothing from the keyword arm at all — "how do I bake sourdough
+bread" finds no match even though the colonoscopy leaflet mentions bread,
+because no passage contains all of bake, sourdough, and bread.
+
+Together, those two bars are what make "the documents do not cover this"
+possible. Without them every question returns six chunks however irrelevant,
+and a model handed six irrelevant passages will find a way to build an answer
+out of them.
 """
 
 from __future__ import annotations
@@ -175,8 +193,9 @@ def hybrid_search(
     indexes are fast — while giving fusion enough to work with. Only the
     survivors are paid for, in prompt tokens.
 
-    Returns an empty list when nothing clears the floor. That is not a failure;
-    it is the signal the answering layer turns into an honest "I don't know".
+    Returns an empty list when nothing clears either bar. That is not a
+    failure; it is the signal the answering layer turns into an honest
+    "I don't know".
     """
     top_k = top_k if top_k is not None else settings.RETRIEVAL_TOP_K
     candidates = candidates if candidates is not None else settings.RETRIEVAL_CANDIDATES
@@ -203,7 +222,14 @@ def hybrid_search(
     for result in fused:
         result.similarity = cosine_similarity(query_embedding, result.chunk.embedding)
 
-    kept = [r for r in fused[:top_k] if r.similarity >= min_similarity]
+    # Either bar admits a chunk: semantic closeness, or an exact lexical match
+    # on every term of the query. See the module docstring for why the second
+    # one is needed and why it is safe.
+    kept = [
+        r
+        for r in fused[:top_k]
+        if r.similarity >= min_similarity or r.keyword_rank is not None
+    ]
 
     logger.info(
         "retrieval query=%r fused=%d kept=%d best_similarity=%.3f",
