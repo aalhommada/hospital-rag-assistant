@@ -48,7 +48,9 @@ class Message(models.Model):
         UNSUPPORTED = "unsupported", "Refused — outside the documents"
         ERROR = "error", "Something went wrong"
 
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
+    conversation = models.ForeignKey(
+        Conversation, on_delete=models.CASCADE, related_name="messages"
+    )
     role = models.CharField(max_length=16, choices=Role.choices)
     text = models.TextField(blank=True)
 
@@ -97,4 +99,8 @@ class Citation(models.Model):
 
     @property
     def label(self) -> str:
-        return f"{self.document_title} — {self.heading_path}" if self.heading_path else self.document_title
+        return (
+            f"{self.document_title} — {self.heading_path}"
+            if self.heading_path
+            else self.document_title
+        )

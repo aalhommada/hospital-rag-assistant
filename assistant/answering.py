@@ -77,7 +77,7 @@ def respond(conversation: Conversation, question: str) -> Iterator[dict[str, Any
         yield {
             "type": "error",
             "text": "The assistant is not set up correctly — its API key was rejected. "
-                    f"Please call the switchboard on {settings.HOSPITAL_SWITCHBOARD}.",
+            f"Please call the switchboard on {settings.HOSPITAL_SWITCHBOARD}.",
         }
     except anthropic.RateLimitError:
         logger.warning("Claude rate limit reached")
@@ -90,7 +90,7 @@ def respond(conversation: Conversation, question: str) -> Iterator[dict[str, Any
         yield {
             "type": "error",
             "text": "I could not reach the answering service. Please try again, or call the "
-                    f"switchboard on {settings.HOSPITAL_SWITCHBOARD}.",
+            f"switchboard on {settings.HOSPITAL_SWITCHBOARD}.",
         }
     except Exception:  # noqa: BLE001 - the browser must always get a final event
         logger.exception("answering failed")
@@ -136,6 +136,7 @@ def _respond(conversation: Conversation, question: str) -> Iterator[dict[str, An
 # Information: the RAG path
 # ---------------------------------------------------------------------------
 
+
 def _handle_information(conversation, question, decision) -> Iterator[dict[str, Any]]:
     yield {"type": "status", "text": "Searching the hospital's documents…"}
     retrieved = hybrid_search(decision.search_query)
@@ -179,7 +180,9 @@ def _handle_information(conversation, question, decision) -> Iterator[dict[str, 
     # A refusal arrives as a normal 200 with no content, so it has to be
     # checked for explicitly rather than discovered as an empty answer.
     if final.stop_reason == "refusal" or not text:
-        logger.warning("answer declined: %s", describe_refusal(final.stop_reason, final.stop_details))
+        logger.warning(
+            "answer declined: %s", describe_refusal(final.stop_reason, final.stop_details)
+        )
         yield from _fixed_reply(
             conversation, question, prompts.clinical_reply(), Message.Route.CLINICAL, decision
         )
@@ -199,6 +202,7 @@ def _handle_information(conversation, question, decision) -> Iterator[dict[str, 
 # ---------------------------------------------------------------------------
 # Appointments: the tool path
 # ---------------------------------------------------------------------------
+
 
 def _handle_booking(conversation, question, decision) -> Iterator[dict[str, Any]]:
     yield {"type": "status", "text": "Checking the appointment book…"}
@@ -267,13 +271,12 @@ def _tool_status(tool_name: str) -> str:
 # Saving
 # ---------------------------------------------------------------------------
 
+
 def _fixed_reply(conversation, question, text, route_value, decision) -> Iterator[dict[str, Any]]:
     """Emit a canned reply as if it had streamed, so the UI has one code path."""
     for line in text.splitlines(keepends=True):
         yield {"type": "token", "text": line}
-    message = _save_answer(
-        conversation, question, text, route_value, decision, refused=True
-    )
+    message = _save_answer(conversation, question, text, route_value, decision, refused=True)
     yield {"type": "done", "message_id": message.pk}
 
 

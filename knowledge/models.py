@@ -45,7 +45,9 @@ class Document(models.Model):
 
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
-    category = models.CharField(max_length=32, choices=Category.choices, default=Category.DEPARTMENT)
+    category = models.CharField(
+        max_length=32, choices=Category.choices, default=Category.DEPARTMENT
+    )
     source_path = models.CharField(max_length=1024)
     source_type = models.CharField(max_length=16, choices=SourceType.choices)
 

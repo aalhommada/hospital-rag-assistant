@@ -169,7 +169,9 @@ def get_embedding_provider() -> EmbeddingProvider:
     elif provider == "openai":
         instance = OpenAIEmbeddings(settings.OPENAI_API_KEY, settings.EMBEDDING_MODEL)
     else:
-        raise ValueError(f"Unknown EMBEDDING_PROVIDER {provider!r}: expected local, voyage, or openai")
+        raise ValueError(
+            f"Unknown EMBEDDING_PROVIDER {provider!r}: expected local, voyage, or openai"
+        )
 
     from knowledge.models import EMBEDDING_DIMENSIONS
 

@@ -123,6 +123,7 @@ def execute_tool(name: str, arguments: dict[str, Any]) -> str:
 # Read
 # ---------------------------------------------------------------------------
 
+
 def find_available_slots(
     department: str,
     clinician_name: str | None = None,
@@ -196,6 +197,7 @@ def _start_of_day(day: date) -> datetime:
 # Write
 # ---------------------------------------------------------------------------
 
+
 def book_appointment(slot_id: int, patient_name: str, contact_number: str, reason: str = "") -> str:
     patient_name = (patient_name or "").strip()
     contact_number = (contact_number or "").strip()
@@ -206,7 +208,9 @@ def book_appointment(slot_id: int, patient_name: str, contact_number: str, reaso
     if not patient_name:
         return "Cannot book without the patient's full name. Ask for it, then call this tool again."
     if not contact_number:
-        return "Cannot book without a contact telephone number. Ask for it, then call this tool again."
+        return (
+            "Cannot book without a contact telephone number. Ask for it, then call this tool again."
+        )
 
     try:
         with transaction.atomic():

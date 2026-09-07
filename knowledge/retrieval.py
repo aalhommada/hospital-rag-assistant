@@ -119,7 +119,9 @@ def vector_search(
     if categories:
         queryset = queryset.filter(document__category__in=categories)
     return list(
-        queryset.annotate(distance=CosineDistance("embedding", embedding)).order_by("distance")[:limit]
+        queryset.annotate(distance=CosineDistance("embedding", embedding)).order_by("distance")[
+            :limit
+        ]
     )
 
 
@@ -226,9 +228,7 @@ def hybrid_search(
     # on every term of the query. See the module docstring for why the second
     # one is needed and why it is safe.
     kept = [
-        r
-        for r in fused[:top_k]
-        if r.similarity >= min_similarity or r.keyword_rank is not None
+        r for r in fused[:top_k] if r.similarity >= min_similarity or r.keyword_rank is not None
     ]
 
     logger.info(

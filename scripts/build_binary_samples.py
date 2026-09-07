@@ -168,5 +168,7 @@ def build_docx(path: Path, sections: list[tuple[str, list[str]]]) -> None:
 
 
 if __name__ == "__main__":
-    build_pdf(SAMPLE_DATA / "pharmacy-and-prescriptions.pdf", PHARMACY, "Pharmacy and prescriptions")
+    build_pdf(
+        SAMPLE_DATA / "pharmacy-and-prescriptions.pdf", PHARMACY, "Pharmacy and prescriptions"
+    )
     build_docx(SAMPLE_DATA / "emergency-department-what-to-expect.docx", EMERGENCY)

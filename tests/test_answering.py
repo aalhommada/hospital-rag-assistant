@@ -50,7 +50,9 @@ def conversation(db):
     return Conversation.objects.create(session_key="test-session")
 
 
-def stub(monkeypatch, *, intent: str, answer: str = "", stop_reason: str = "end_turn", query: str = ""):
+def stub(
+    monkeypatch, *, intent: str, answer: str = "", stop_reason: str = "end_turn", query: str = ""
+):
     monkeypatch.setattr(
         answering,
         "route",
@@ -73,7 +75,10 @@ def answer_message(conversation):
 
 # --- refusals -------------------------------------------------------------
 
-def test_an_emergency_is_redirected_without_calling_the_model(conversation, monkeypatch, sample_documents):
+
+def test_an_emergency_is_redirected_without_calling_the_model(
+    conversation, monkeypatch, sample_documents
+):
     def explode(**kwargs):
         raise AssertionError("the model must not be called for an emergency")
 
@@ -91,7 +96,9 @@ def test_an_emergency_is_redirected_without_calling_the_model(conversation, monk
     assert message.refused
 
 
-def test_a_clinical_question_is_refused_and_never_searched(conversation, monkeypatch, sample_documents):
+def test_a_clinical_question_is_refused_and_never_searched(
+    conversation, monkeypatch, sample_documents
+):
     def explode(*args, **kwargs):
         raise AssertionError("a clinical question must not reach retrieval")
 
@@ -105,7 +112,9 @@ def test_a_clinical_question_is_refused_and_never_searched(conversation, monkeyp
     assert message.refused
 
 
-def test_nothing_retrieved_means_an_honest_i_do_not_know(conversation, monkeypatch, sample_documents):
+def test_nothing_retrieved_means_an_honest_i_do_not_know(
+    conversation, monkeypatch, sample_documents
+):
     stub(monkeypatch, intent="information", answer="should never be used")
     monkeypatch.setattr(answering, "hybrid_search", lambda *a, **k: [])
 
@@ -116,8 +125,12 @@ def test_nothing_retrieved_means_an_honest_i_do_not_know(conversation, monkeypat
     assert message.citations.count() == 0
 
 
-def test_a_model_refusal_falls_back_to_the_clinical_reply(conversation, monkeypatch, sample_documents):
-    stub(monkeypatch, intent="information", answer="", stop_reason="refusal", query="visiting hours")
+def test_a_model_refusal_falls_back_to_the_clinical_reply(
+    conversation, monkeypatch, sample_documents
+):
+    stub(
+        monkeypatch, intent="information", answer="", stop_reason="refusal", query="visiting hours"
+    )
 
     text = collect(answering.respond(conversation, "something borderline"))
     assert "cannot answer that" in text
@@ -126,7 +139,10 @@ def test_a_model_refusal_falls_back_to_the_clinical_reply(conversation, monkeypa
 
 # --- the grounded path ----------------------------------------------------
 
-def test_a_grounded_answer_is_stored_with_its_citations(conversation, monkeypatch, sample_documents):
+
+def test_a_grounded_answer_is_stored_with_its_citations(
+    conversation, monkeypatch, sample_documents
+):
     stub(
         monkeypatch,
         intent="information",
@@ -148,12 +164,19 @@ def test_a_grounded_answer_is_stored_with_its_citations(conversation, monkeypatc
 
 def test_only_cited_passages_are_recorded(conversation, monkeypatch, sample_documents):
     """Six passages go into the prompt; if the answer cites one, one is shown."""
-    stub(monkeypatch, intent="information", answer="Visiting is 14:00 to 16:00 [1].", query="visiting hours")
+    stub(
+        monkeypatch,
+        intent="information",
+        answer="Visiting is 14:00 to 16:00 [1].",
+        query="visiting hours",
+    )
     list(answering.respond(conversation, "what are the visiting hours"))
     assert answer_message(conversation).citations.count() == 1
 
 
-def test_a_citation_number_that_was_never_offered_is_ignored(conversation, monkeypatch, sample_documents):
+def test_a_citation_number_that_was_never_offered_is_ignored(
+    conversation, monkeypatch, sample_documents
+):
     stub(monkeypatch, intent="information", answer="Made up [99].", query="visiting hours")
     list(answering.respond(conversation, "what are the visiting hours"))
     assert answer_message(conversation).citations.count() == 0
@@ -176,7 +199,10 @@ def test_citations_snapshot_the_document_title(conversation, monkeypatch, sample
 
 # --- failure handling -----------------------------------------------------
 
-def test_a_missing_api_key_produces_an_actionable_message(conversation, monkeypatch, sample_documents):
+
+def test_a_missing_api_key_produces_an_actionable_message(
+    conversation, monkeypatch, sample_documents
+):
     from assistant.llm import LLMNotConfigured
 
     def unconfigured(*args, **kwargs):

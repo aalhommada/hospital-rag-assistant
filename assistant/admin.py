@@ -47,7 +47,15 @@ class MessageAdmin(admin.ModelAdmin):
     list_filter = ("role", "route", "refused")
     search_fields = ("text", "search_query")
     inlines = [CitationInline]
-    readonly_fields = ("conversation", "role", "text", "route", "search_query", "refused", "created_at")
+    readonly_fields = (
+        "conversation",
+        "role",
+        "text",
+        "route",
+        "search_query",
+        "refused",
+        "created_at",
+    )
 
     @admin.display(description="Text")
     def snippet(self, obj) -> str:

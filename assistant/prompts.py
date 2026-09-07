@@ -68,6 +68,7 @@ the search query is "visiting hours for the children's ward". For "appointment",
 # Answering from documents
 # ---------------------------------------------------------------------------
 
+
 def answering_system() -> str:
     return f"""\
 You are the patient information assistant for {settings.HOSPITAL_NAME}. You \
@@ -127,9 +128,7 @@ def build_context_block(retrieved) -> str:
             if chunk.document.reviewed_on
             else ""
         )
-        parts.append(
-            f"[{index}] {chunk.document.title}{heading}{reviewed}\n{chunk.text}"
-        )
+        parts.append(f"[{index}] {chunk.document.title}{heading}{reviewed}\n{chunk.text}")
     return "\n\n".join(parts)
 
 
@@ -146,6 +145,7 @@ def build_answering_user_message(question: str, retrieved) -> str:
 # ---------------------------------------------------------------------------
 # Booking
 # ---------------------------------------------------------------------------
+
 
 def booking_system() -> str:
     return f"""\
@@ -190,6 +190,7 @@ department's telephone number.\
 # be the same every time, must be instant, and must not depend on a model
 # behaving well.
 # ---------------------------------------------------------------------------
+
 
 def emergency_reply() -> str:
     return (

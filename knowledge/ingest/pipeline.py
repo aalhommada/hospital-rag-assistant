@@ -50,7 +50,9 @@ def ingest_file(path: Path, *, force: bool = False) -> IngestResult:
         loaded = load(path)
     except Exception as error:  # noqa: BLE001 - one bad file must not stop the run
         logger.warning("could not load %s: %s", path, error)
-        return IngestResult(path=path, title=path.name, chunk_count=0, status="failed", detail=str(error))
+        return IngestResult(
+            path=path, title=path.name, chunk_count=0, status="failed", detail=str(error)
+        )
 
     slug = slugify(path.stem)[:255]
     existing = Document.objects.filter(slug=slug).first()

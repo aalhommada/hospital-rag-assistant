@@ -12,7 +12,9 @@ pytestmark = pytest.mark.django_db
 
 def sse_payloads(response):
     body = b"".join(response.streaming_content).decode()
-    return [json.loads(line[len("data: ") :]) for line in body.splitlines() if line.startswith("data: ")]
+    return [
+        json.loads(line[len("data: ") :]) for line in body.splitlines() if line.startswith("data: ")
+    ]
 
 
 def test_the_chat_page_renders(client):

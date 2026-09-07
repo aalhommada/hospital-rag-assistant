@@ -49,7 +49,11 @@ class Command(BaseCommand):
         parser.add_argument(
             "--questions", default=str(QUESTIONS_FILE), help="Path to the question set"
         )
-        parser.add_argument("--verbose-failures", action="store_true", help="Show what was retrieved for each failure")
+        parser.add_argument(
+            "--verbose-failures",
+            action="store_true",
+            help="Show what was retrieved for each failure",
+        )
 
     def handle(self, *args, **options) -> None:
         path = Path(options["questions"])
@@ -106,7 +110,9 @@ class Command(BaseCommand):
 
         self._line("Right document retrieved", found, len(answerable))
         self._line("Answer actually present in the passages", grounded, len(answerable))
-        self._line("Out-of-scope questions correctly rejected", refused_correctly, len(out_of_scope))
+        self._line(
+            "Out-of-scope questions correctly rejected", refused_correctly, len(out_of_scope)
+        )
 
         if failures:
             self.stdout.write(self.style.WARNING(f"\n{len(failures)} question(s) to look at:"))

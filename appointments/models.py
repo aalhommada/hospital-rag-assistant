@@ -45,7 +45,9 @@ class Clinician(models.Model):
     class Meta:
         ordering = ["full_name"]
         constraints = [
-            models.UniqueConstraint(fields=["full_name", "department"], name="unique_clinician_per_department")
+            models.UniqueConstraint(
+                fields=["full_name", "department"], name="unique_clinician_per_department"
+            )
         ]
 
     def __str__(self) -> str:
@@ -63,7 +65,9 @@ class Slot(models.Model):
     class Meta:
         ordering = ["starts_at"]
         constraints = [
-            models.UniqueConstraint(fields=["clinician", "starts_at"], name="unique_slot_per_clinician")
+            models.UniqueConstraint(
+                fields=["clinician", "starts_at"], name="unique_slot_per_clinician"
+            )
         ]
         indexes = [models.Index(fields=["starts_at", "is_booked"], name="slot_availability_idx")]
 

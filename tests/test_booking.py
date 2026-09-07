@@ -31,7 +31,12 @@ def test_booked_slots_disappear_from_the_list(booking_book):
     slot = booking_book["slots"][0]
     execute_tool(
         "book_appointment",
-        {"slot_id": slot.pk, "patient_name": "Alex Fisher", "contact_number": "07700 900123", "reason": "review"},
+        {
+            "slot_id": slot.pk,
+            "patient_name": "Alex Fisher",
+            "contact_number": "07700 900123",
+            "reason": "review",
+        },
     )
     assert f"slot_id={slot.pk} " not in find_available_slots("Cardiology", None, None, None)
 
@@ -40,7 +45,12 @@ def test_booking_creates_an_appointment_with_a_reference(booking_book):
     slot = booking_book["slots"][0]
     result = execute_tool(
         "book_appointment",
-        {"slot_id": slot.pk, "patient_name": "Alex Fisher", "contact_number": "07700 900123", "reason": "review"},
+        {
+            "slot_id": slot.pk,
+            "patient_name": "Alex Fisher",
+            "contact_number": "07700 900123",
+            "reason": "review",
+        },
     )
     appointment = Appointment.objects.get()
     assert appointment.reference in result
@@ -50,7 +60,12 @@ def test_booking_creates_an_appointment_with_a_reference(booking_book):
 
 def test_the_same_slot_cannot_be_booked_twice(booking_book):
     slot = booking_book["slots"][0]
-    payload = {"slot_id": slot.pk, "patient_name": "A B", "contact_number": "07700 900123", "reason": "x"}
+    payload = {
+        "slot_id": slot.pk,
+        "patient_name": "A B",
+        "contact_number": "07700 900123",
+        "reason": "x",
+    }
     execute_tool("book_appointment", payload)
     second = execute_tool("book_appointment", {**payload, "patient_name": "C D"})
     assert "just been taken" in second
@@ -69,7 +84,12 @@ def test_an_invented_slot_id_is_refused(booking_book):
 def test_booking_without_a_name_is_refused(booking_book):
     result = execute_tool(
         "book_appointment",
-        {"slot_id": booking_book["slots"][0].pk, "patient_name": "  ", "contact_number": "07700 900123", "reason": "x"},
+        {
+            "slot_id": booking_book["slots"][0].pk,
+            "patient_name": "  ",
+            "contact_number": "07700 900123",
+            "reason": "x",
+        },
     )
     assert "full name" in result
     assert Appointment.objects.count() == 0
@@ -78,7 +98,12 @@ def test_booking_without_a_name_is_refused(booking_book):
 def test_booking_without_a_number_is_refused(booking_book):
     result = execute_tool(
         "book_appointment",
-        {"slot_id": booking_book["slots"][0].pk, "patient_name": "A B", "contact_number": "", "reason": "x"},
+        {
+            "slot_id": booking_book["slots"][0].pk,
+            "patient_name": "A B",
+            "contact_number": "",
+            "reason": "x",
+        },
     )
     assert "telephone number" in result
     assert Appointment.objects.count() == 0
@@ -91,7 +116,12 @@ def test_past_slots_are_never_offered_or_booked(booking_book):
     assert f"slot_id={stale.pk} " not in find_available_slots("Cardiology", None, None, None)
     result = execute_tool(
         "book_appointment",
-        {"slot_id": stale.pk, "patient_name": "A B", "contact_number": "07700 900123", "reason": "x"},
+        {
+            "slot_id": stale.pk,
+            "patient_name": "A B",
+            "contact_number": "07700 900123",
+            "reason": "x",
+        },
     )
     assert "in the past" in result
 

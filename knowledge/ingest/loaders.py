@@ -65,7 +65,9 @@ def load(path: Path) -> LoadedDocument:
         return load_pdf(path)
     if suffix == ".docx":
         return load_docx(path)
-    raise UnsupportedFileType(f"{path.name}: only {', '.join(sorted(SUPPORTED_SUFFIXES))} are supported")
+    raise UnsupportedFileType(
+        f"{path.name}: only {', '.join(sorted(SUPPORTED_SUFFIXES))} are supported"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -103,7 +105,9 @@ def load_markdown(path: Path) -> LoadedDocument:
         heading = HEADING.match(line)
         if heading:
             flush()
-            blocks.append(Block(kind="heading", text=heading.group(2).strip(), level=len(heading.group(1))))
+            blocks.append(
+                Block(kind="heading", text=heading.group(2).strip(), level=len(heading.group(1)))
+            )
         elif line.strip():
             paragraph.append(line)
         else:
@@ -134,7 +138,7 @@ def _split_front_matter(raw: str) -> tuple[dict[str, str], str]:
         if ":" in line:
             key, _, value = line.partition(":")
             metadata[key.strip()] = value.strip()
-    return metadata, raw[match.end():]
+    return metadata, raw[match.end() :]
 
 
 def _parse_date(value: str | None) -> date | None:
@@ -153,6 +157,7 @@ def _first_heading(blocks: list[Block]) -> str | None:
 # ---------------------------------------------------------------------------
 # PDF
 # ---------------------------------------------------------------------------
+
 
 def load_pdf(path: Path) -> LoadedDocument:
     """
@@ -241,6 +246,7 @@ def _looks_like_heading(line: str) -> bool:
 # ---------------------------------------------------------------------------
 # Word
 # ---------------------------------------------------------------------------
+
 
 def load_docx(path: Path) -> LoadedDocument:
     """Word keeps real heading styles, so this loader is the most reliable one."""
