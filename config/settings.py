@@ -142,7 +142,11 @@ CHUNK_OVERLAP_WORDS = env_int("CHUNK_OVERLAP_WORDS", 30)
 
 RETRIEVAL_CANDIDATES = env_int("RETRIEVAL_CANDIDATES", 30)
 RETRIEVAL_TOP_K = env_int("RETRIEVAL_TOP_K", 6)
-RETRIEVAL_MIN_SCORE = env_float("RETRIEVAL_MIN_SCORE", 0.01)
+# Cosine similarity a chunk must reach to be allowed into the prompt.
+# Measured on this corpus: answerable questions score 0.74-0.85, unanswerable
+# ones 0.48-0.58, so 0.65 sits in the gap. Re-measure it if you change the
+# embedding model or the documents — `manage.py evaluate` reports both sides.
+RETRIEVAL_MIN_SIMILARITY = env_float("RETRIEVAL_MIN_SIMILARITY", 0.65)
 # Constant in the Reciprocal Rank Fusion formula 1 / (RRF_K + rank).
 # 60 is the value from the original paper and works well without tuning.
 RRF_K = env_int("RRF_K", 60)
