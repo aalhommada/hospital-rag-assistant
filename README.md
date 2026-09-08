@@ -64,7 +64,8 @@ Requires Python 3.10+, Docker, and a Claude API key from
 [console.anthropic.com](https://console.anthropic.com/settings/keys).
 
 ```bash
-git clone <this repo> && cd hospital-rag-assistant
+git clone https://github.com/aalhommada/hospital-rag-assistant.git
+cd hospital-rag-assistant
 
 make install            # virtualenv + dependencies
 cp .env.example .env    # then put your ANTHROPIC_API_KEY in it
