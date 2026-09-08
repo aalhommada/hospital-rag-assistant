@@ -2,16 +2,28 @@
 PY := .venv/bin/python
 PIP := .venv/bin/pip
 
+# Django 6.1 needs Python 3.12 or newer. Pick the newest interpreter on this
+# machine that qualifies, rather than whatever `python3` happens to point at —
+# an older `python3` does not fail, it silently resolves Django to 5.2.
+PYTHON ?= $(shell for p in python3.14 python3.13 python3.12 python3; do \
+	command -v $$p >/dev/null 2>&1 && \
+	$$p -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 12) else 1)' 2>/dev/null && \
+	echo $$p && break; done)
+
 # Compose v2 is a docker subcommand; older installs ship the standalone binary.
 COMPOSE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
 
-.PHONY: help install db-up db-down migrate seed ingest run test lint format evaluate evaluate-routing reset
+.PHONY: help install db-up db-down migrate seed ingest run test lint format evaluate evaluate-routing outdated reset
 
 help:
 	@grep -E '^[a-z-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
 install: ## Create the virtualenv and install dependencies
-	python3 -m venv .venv
+ifeq ($(PYTHON),)
+	$(error No Python 3.12+ found. Install one, e.g. `uv python install 3.14`, or `sudo apt install python3.13`, then re-run `make install`)
+endif
+	@echo "using $(PYTHON) ($$($(PYTHON) --version))"
+	$(PYTHON) -m venv .venv
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements-dev.txt
 
@@ -46,6 +58,9 @@ lint: ## Check formatting and lint rules
 format: ## Apply formatting
 	.venv/bin/ruff format .
 	.venv/bin/ruff check --fix .
+
+outdated: ## List dependencies with a newer release available
+	$(PIP) list --outdated
 
 evaluate: ## Score retrieval against the labelled question set (no API key needed)
 	$(PY) manage.py evaluate

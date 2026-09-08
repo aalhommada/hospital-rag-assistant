@@ -1,7 +1,9 @@
 -r requirements.txt
-pytest
-pytest-django
-ruff
+
+pytest==9.1.1
+pytest-django==4.14.0
+ruff==0.16.6
+
 # Only needed to regenerate the sample PDF in sample_data/ — see
 # scripts/build_binary_samples.py. Not needed to run the application.
-reportlab
+reportlab==5.0.1

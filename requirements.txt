@@ -1,9 +1,28 @@
-Django
-psycopg[binary]
-pgvector
-anthropic
-fastembed
-pypdf
-python-docx
-python-dotenv
-PyYAML
+# Pinned so every clone builds the same thing. All versions were the latest
+# stable release at the time of writing.
+#
+# To check what has moved on:  make outdated
+# To upgrade:                  bump a pin, then `make test` and `make evaluate`
+#                              before you trust it.
+
+# Django 6.1 requires Python 3.12 or newer.
+Django==6.1.1
+
+# Database. psycopg 3 is the current driver; psycopg2 is the previous generation.
+psycopg[binary]==3.3.5
+pgvector==0.5.0
+
+# Claude.
+anthropic==1.4.0
+
+# Embeddings, running locally on ONNX — no API key, no network after the first
+# model download.
+fastembed==0.8.0
+
+# Document loading.
+pypdf==6.18.0
+python-docx==1.2.0
+
+# Configuration and the evaluation question set.
+python-dotenv==1.2.3
+PyYAML==6.0.3

@@ -4,7 +4,7 @@ A patient information assistant for a hospital. It answers practical questions
 from the hospital's own documents, shows the source of every claim, refuses
 anything clinical, and books outpatient appointments.
 
-Built with **Django 5.2**, **PostgreSQL 17 + pgvector**, **HTMX**, and
+Built with **Django 6.1**, **PostgreSQL 17 + pgvector**, **HTMX**, and
 **Claude**. Server-rendered throughout — no JavaScript framework, no separate
 API, one deployable.
 
@@ -60,8 +60,35 @@ Claude's.
 
 ## Running it
 
-Requires Python 3.10+, Docker, and a Claude API key from
-[console.anthropic.com](https://console.anthropic.com/settings/keys).
+You need three things:
+
+| | Why | Check |
+|---|---|---|
+| **Python 3.12 or newer** | Django 6.1 requires it | `python3 --version` |
+| **Docker** | Runs Postgres with pgvector | `docker --version` |
+| **A Claude API key** | The only key needed — embeddings run locally | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
+
+<details>
+<summary><b>If your <code>python3</code> is older than 3.12</b></summary>
+
+Most systems still ship 3.10 or 3.11. Installing a newer one takes a minute and
+does not touch your system Python:
+
+```bash
+# Recommended — no sudo, installs under ~/.local
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv python install 3.14
+
+# Or, on Debian/Ubuntu with the deadsnakes PPA
+sudo add-apt-repository ppa:deadsnakes/ppa && sudo apt install python3.13-venv
+```
+
+`make install` finds the newest qualifying interpreter by itself and refuses to
+build the environment if there is not one. That refusal is deliberate: an older
+`python3` does not fail loudly here, it quietly resolves Django to 5.2 and you
+find out much later.
+
+</details>
 
 ```bash
 git clone https://github.com/aalhommada/hospital-rag-assistant.git
@@ -76,6 +103,28 @@ make run                # http://127.0.0.1:8000
 ```
 
 First run downloads the embedding model (~130 MB) once.
+
+### Versions
+
+Every dependency is pinned in `requirements.txt`, and each was the latest stable
+release at the time of writing.
+
+| | Version |
+|---|---|
+| Python | 3.14 |
+| Django | 6.1 |
+| PostgreSQL | 17 |
+| pgvector | 0.8 |
+| psycopg | 3.3 |
+| anthropic | 1.4 |
+
+```bash
+make outdated    # what has moved on since
+```
+
+Bump a pin, then run `make test` and `make evaluate` before trusting it. The
+evaluation matters more than the tests when upgrading an embedding or model
+dependency, because a quality regression there passes every test silently.
 
 ```bash
 make test               # 70 tests, no API key needed
